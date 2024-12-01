@@ -1,6 +1,7 @@
 /.vscode
 /hell.exe
-/.exe
-/.o
-/.txt
-/.pngs
+*.exe
+*.o
+*.txt
+*.png
+*.html
