@@ -29,11 +29,14 @@ int main()
 
     tree_t testTree = {};
     node_t *test = getG();
-
     testTree.treeStart = test;
+
+    generate_html(&testTree);
 
     dif_calc_f(testTree.treeStart, &testTree);
 
     generate_html(&testTree);
+
+    return 0;
 
 }

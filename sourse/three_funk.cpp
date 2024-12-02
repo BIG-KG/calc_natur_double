@@ -42,7 +42,7 @@ node_t *copyNode(node_t *copingNode, tree_t *currTree)
 
 int delete_tree(node_t *deleatingNode)
 {
-    if (!deleatingNode) return 0;
+    if (deleatingNode == NULL) return 0;
 
     if(deleatingNode->left != NULL)
     {

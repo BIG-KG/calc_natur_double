@@ -20,9 +20,9 @@ extern char funcs[][20];
 
 int p = 0;
 
-char s[100] = "d(x)$";
+//char s[100] = "d((x+1)/(x*x))$";
 
-// char s[100] = "((25*10*(3*(25-10*2)+1))-3990)^3$";
+char s[100] = "d((x+1)/(x*x))$";
 
 node_t *getP()
 {
@@ -31,7 +31,11 @@ node_t *getP()
     {
         p++;
         node_t *val = getE();
-        if(s[p] != ')') assert(0);
+        if(s[p] != ')') 
+        {
+            printf("p = %d", p);           
+            assert(0);
+        }
         p++;
         return val;
     }
@@ -77,16 +81,6 @@ node_t *getE()
 
 node_t *getG()
 {
-    // strcpy (funcs[SIN], NAME_STR(SIN));
-    // strcpy (funcs[COS], NAME_STR(COS));
-    // strcpy (funcs[SUB], "-");
-    // strcpy (funcs[SUM], "+");
-    // strcpy (funcs[DIV], "/");
-    // strcpy (funcs[MUL], "*");
-    // strcpy (funcs[DIF], "d");
-    // strcpy (funcs[POW], "^");
-
-    //printf("start G");
     node_t *val = getE();
     if(s[p] != '$')  assert(0);
     return val;
@@ -136,9 +130,9 @@ node_t *getT()
         if (op == '*') currOp->data.data = MUL;
         else           currOp->data.data = DIV;
 
-        currOp->right = prevOp;
+        currOp->left  = prevOp;
 
-        currOp->left  = getS();
+        currOp->right = getS();
     }
 
     return currOp;

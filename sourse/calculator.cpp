@@ -10,93 +10,70 @@
 
 int dif_calc_f(node_t *currNode, tree_t *currTree)
 {
-    if(currNode == NULL) return 0;
-
-    generate_html(currTree);
-
     void *start = currNode;
     if ( !(currNode->data.nodeType == FUNC && currNode->data.data == DIF) )
     {   
-        printf("\n\nno_dif\n");
-        printf("type = %d", currNode->data.nodeType);
-        if(currNode->data.nodeType == FUNC) 
-        {
-            printf("test\n");
-            printf("\nf = %d\n", currNode->data.data); 
-        }
-        
         dif_calc_f(currNode->left,  currTree);
         dif_calc_f(currNode->right, currTree);
-
         return 0;
     }
     printf("\n\ndiff\n");
 
     if(currNode->right->data.nodeType == CONST)
     {
-        printf("case2\n");
-        delete_tree (currNode->right);
-        currNode->right = NULL;
-        currNode->data.data = 0;
-        currNode->data.nodeType = CONST;
-
+        dif_const(currNode, currTree);
         return 0;
     }
 
     if(currNode->right->data.nodeType == VARIABLE)
     {
-        printf("case1\n");
-        delete_tree (currNode->right);
-        currNode->right = NULL;
-        currNode->data.data = 1;
-        currNode->data.nodeType = CONST;
-
+        dif_var(currNode, currTree);
         return 0;
     }
 
     if ( (currNode->right->data.data == SUM) || (currNode->right->data.data == SUB) )
     {
-        printf("case0\n");
-        node_t *leftNew = make_element();
-        leftNew->data.nodeType = FUNC;
-        leftNew->data.data = DIF;
-        leftNew->right = currNode->right->right;
-
-
-        currNode->data.data = currNode->right->data.data;
-        currNode->left = leftNew;
-
-        currNode->right->data.data = DIF;
-        currNode->right->right = currNode->right->left;
-        currNode->right->left = NULL; 
-
-        dif_calc_f(currNode->left,  currTree);
-        dif_calc_f(currNode->right, currTree);
-        return 0;
+        dif_sum_sub(currNode, currTree);        
     }
 
     if ( currNode->right->data.data == MUL)
     {   
-        printf("startMUL\n");
-        dif_div(currNode, currTree);
-
-        printf("11111111111\n");
-        dif_calc_f(currNode->left, currTree);
-        generate_html(currTree);
-        dif_calc_f(currNode->right, currTree);
-
-        generate_html(currTree);
-        printf("22222222222\n");
-
-        printf("st = %p , curr= %p", start, currNode);
-        printf("type = %d, data = %d", currNode->data.nodeType, currNode->data.data);
-        return 0;
+        dif_mul(currNode, currTree);
     }
-    printf("bliat\n");
+
+    if ( currNode->right->data.data == DIV)
+    {   
+        dif_div(currNode, currTree);
+    }
+
+    dif_calc_f(currNode->right, currTree);
+    dif_calc_f(currNode->left , currTree);
+
     return 0;
 }
 
-node_t *dif_div(node_t *currNode,  tree_t *currTree)
+node_t *dif_sum_sub(node_t *currNode,  tree_t *currTree)
+{
+    node_t *leftNew = make_element();
+    leftNew->data.nodeType = FUNC;
+    leftNew->data.data = DIF;
+    leftNew->right = currNode->right->right;
+
+
+    currNode->data.data = currNode->right->data.data;
+    currNode->left = leftNew;
+ 
+    currNode->right->data.data = DIF;
+    currNode->right->right = currNode->right->left;
+    currNode->right->left = NULL; 
+
+    dif_calc_f(currNode->left,  currTree);
+    dif_calc_f(currNode->right, currTree);
+
+    return currNode;
+}
+
+node_t *dif_mul(node_t *currNode,  tree_t *currTree)
 {
     node_t *right_o = currNode->right->right;
     node_t *left_o  = currNode->right->left ;
@@ -104,21 +81,12 @@ node_t *dif_div(node_t *currNode,  tree_t *currTree)
     node_t *right_c = copyNode(right_o, currTree);
     node_t *left_c  = copyNode(left_o,  currTree);
 
-    node_t *dif_1 = make_element();
-    dif_1->data.nodeType = FUNC;
-    dif_1->data.data     = DIF;        
-
-    node_t *dif_2 = make_element();
-    dif_2->data.nodeType = FUNC;
-    dif_2->data.data     = DIF;
+    node_t *dif_1 = make_dif_node();
+    node_t *dif_2 = make_dif_node();
+    node_t *mul_2 = make_mul_node();
 
     node_t *mul_1 = currNode->right;
-
-    node_t *mul_2 = make_element();
-    mul_2->data.nodeType = FUNC;
-    mul_2->data.data     = MUL;
-
-
+    
     currNode->data.data = SUM;
     currNode->right = mul_2;
     currNode->left  = mul_1;
@@ -133,4 +101,66 @@ node_t *dif_div(node_t *currNode,  tree_t *currTree)
 
     printf("end_mul\n");
     return currNode;
+}
+
+node_t *dif_div(node_t *currNode,  tree_t *currTree)
+{
+    node_t *difL = make_dif_node();
+    node_t *mulR = make_mul_node();
+    
+    mulR->right  = copyNode (currNode->right->right, currTree);
+    mulR->left   = copyNode (mulR->right,            currTree);
+
+    currNode->data.data = DIV;
+    currNode->left      = mulR;
+
+    difL->right     = currNode->right;
+    currNode->right = difL;
+    difL->right->data.data = MUL;
+
+    dif_mul(difL, currTree);
+
+    difL->data.data = SUB;
+
+    return currNode;
+}
+
+node_t *dif_const(node_t *currNode,  tree_t *currTree)
+{
+    delete_tree (currNode->right);
+    delete_tree (currNode->left );
+    currNode->right = NULL;
+    currNode->data.data = 0;
+    currNode->data.nodeType = CONST;
+
+    return currNode;
+}
+
+node_t *dif_var(node_t *currNode,  tree_t *currTree)
+{
+    delete_tree (currNode->right);
+    delete_tree (currNode->left );
+    currNode->right = NULL;
+    currNode->data.data = 1;
+    currNode->data.nodeType = CONST;
+
+    return currNode; 
+}
+
+node_t *make_dif_node()
+{
+    node_t *dif_1 = make_element();
+    dif_1->data.nodeType = FUNC;
+    dif_1->data.data     = DIF;        
+
+    return dif_1;
+}
+
+node_t *make_mul_node()
+{
+    node_t *dif_1 = make_element();
+    dif_1->data.nodeType = FUNC;
+    dif_1->data.data     = MUL;        
+
+    return dif_1;
 }
