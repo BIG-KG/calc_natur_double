@@ -86,13 +86,10 @@ void print_node(node_t *curr_node, FILE *txtFile)
     {   
         fprintf(txtFile, "node%d -> node%d;\n", curr_node, curr_node->left );
         print_node(curr_node->left, txtFile);
-
     }
 
     if(curr_node->right != NULL)
     {   
-        
-        //printf("right\n");
         fprintf(txtFile, "node%d -> node%d;\n", curr_node, curr_node->right);
         print_node(curr_node->right, txtFile);
     }
