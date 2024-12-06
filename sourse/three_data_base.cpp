@@ -22,6 +22,7 @@ enum {
 
 node_t *make_node (FILE *loading_file, int *errorStream, tree_t *currTree)
 {
+    
     node_t *newNode         = make_element ();
     char    startElementget = 0;
 

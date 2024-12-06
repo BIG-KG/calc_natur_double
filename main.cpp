@@ -28,12 +28,14 @@ int main()
     strcpy(funcs[POW], "^");
 
     tree_t testTree = {};
-    node_t *test = getG();
+    node_t *test = getMain();
     testTree.treeStart = test;
 
     generate_html(&testTree);
 
     dif_calc_f(testTree.treeStart, &testTree);
+
+    printf("end\n");
 
     generate_html(&testTree);
 

@@ -25,10 +25,18 @@ enum funcs
     LOG
 };
 
+union calc_node_data
+{
+    double cnst = 0;
+    int    var ;
+    int    func;
+};
+
+
 struct calc_node
 {
-    int nodeType = -1; //no data type has code -1
-    int data     = 0;
+    int            nodeType = -1; //no data type has code -1
+    calc_node_data nodeData = {};
 };
 
 

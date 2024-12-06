@@ -4,12 +4,12 @@
 #include "tree_types.h"
 
 node_t *getStr();
-node_t *getG();
-node_t *getE();
-node_t *getT();
-node_t *getP();
-node_t *getN();
-node_t *getS();
+node_t *getMain();
+node_t *getSumSub();
+node_t *getMulDiv();
+node_t *getBrackets();
+node_t *getDouble();
+node_t *getPow();
 int    findfunc (char * const funcName);
 int    findVar  (char * const valName);
 

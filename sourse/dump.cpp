@@ -70,7 +70,7 @@ void print_node(node_t *curr_node, FILE *txtFile)
 
     if     (curr_node->data.nodeType == CONST)
     {
-        fprintf (txtFile, ", label = \"%d \" ]; \n", curr_node->data.data);
+        fprintf (txtFile, ", label = \"%lf \" ]; \n", curr_node->data.nodeData.cnst);
     }
     else if(curr_node->data.nodeType == VARIABLE)
     {
@@ -78,7 +78,7 @@ void print_node(node_t *curr_node, FILE *txtFile)
     }
     else if(curr_node->data.nodeType == FUNC)
     {
-        fprintf (txtFile, ", label = \"%s\" ]; \n", funcs[curr_node->data.data], curr_node->data.data );
+        fprintf (txtFile, ", label = \"%s\" ]; \n", funcs[curr_node->data.nodeData.func]);
     }
 
 
@@ -86,14 +86,16 @@ void print_node(node_t *curr_node, FILE *txtFile)
     {   
         fprintf(txtFile, "node%d -> node%d;\n", curr_node, curr_node->left );
         print_node(curr_node->left, txtFile);
+
     }
 
     if(curr_node->right != NULL)
     {   
+        
+        //printf("right\n");
         fprintf(txtFile, "node%d -> node%d;\n", curr_node, curr_node->right);
         print_node(curr_node->right, txtFile);
     }
 
     return;
-
 }

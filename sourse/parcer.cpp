@@ -1,8 +1,9 @@
+#include <string.h>
+#include <strings.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
 #include <ctype.h>
 
 #include "..\headers\tree_types.h"
@@ -24,13 +25,12 @@ int p = 0;
 
 char s[100] = "d((x+1)/(x*x))$";
 
-node_t *getP()
+node_t *getBrackets()
 {
-
     if(s[p] == '(')
     {
         p++;
-        node_t *val = getE();
+        node_t *val = getSumSub();
         if(s[p] != ')') 
         {
             printf("p = %d", p);           
@@ -42,15 +42,15 @@ node_t *getP()
 
     else
     {
-        return getN();
+        return getDouble();
     }
  
 }
 
-node_t *getE()
+node_t *getSumSub()
 {
     //printf("start E\n");
-    node_t *val  = getT();
+    node_t *val  = getMulDiv();
 
     node_t *prevOp = NULL;
     node_t *currOp = val ;
@@ -67,26 +67,26 @@ node_t *getE()
 
         currOp = make_element();
         currOp->data.nodeType = FUNC;
-        if (op == '+') currOp->data.data = SUM;
-        else           currOp->data.data = SUB;
+        if (op == '+') currOp->data.nodeData.func = SUM;
+        else           currOp->data.nodeData.func = SUB;
 
         currOp->right = prevOp;
 
-        currOp->left  = getT();
+        currOp->left  = getMulDiv();
     }
 
     return currOp;    
 }
 
 
-node_t *getG()
+node_t *getMain()
 {
-    node_t *val = getE();
+    node_t *val = getSumSub();
     if(s[p] != '$')  assert(0);
     return val;
 }
 
-node_t *getN()
+node_t *getDouble()
 {
     //printf("start N\n");
     if( isalpha(s[p]) ) return getStr();
@@ -99,18 +99,30 @@ node_t *getN()
         val = val * 10 + (double)(s[p] - '0');
         p++;
     }
+    if(s[p] == '.')
+    {   
+
+        double step = 0.1;
+        while ('0' <= s[p] && s[p] <= '9')
+        {
+            val += step * (double)(s[p] - '0');
+            p++;
+            step *= 0.1;
+        }
+
+    }
+
     if (startPos == p) assert(0);
 
-    cnstNode->data.nodeType = CONST;
-    cnstNode->data.data     = val;
+    cnstNode->data.nodeType      = CONST;
+    cnstNode->data.nodeData.cnst = val;
 
     return cnstNode;
 }
 
-//getT->getS
-node_t *getT()
+node_t *getMulDiv()
 {
-     node_t *val  = getS();
+     node_t *val  = getPow();
 
     node_t *prevOp = NULL;
     node_t *currOp = val ;
@@ -127,32 +139,32 @@ node_t *getT()
 
         currOp = make_element();
         currOp->data.nodeType = FUNC;
-        if (op == '*') currOp->data.data = MUL;
-        else           currOp->data.data = DIV;
+        if (op == '*') currOp->data.nodeData.func = MUL;
+        else           currOp->data.nodeData.func = DIV;
 
         currOp->left  = prevOp;
 
-        currOp->right = getS();
+        currOp->right = getPow();
     }
 
     return currOp;
 }
 
-node_t *getS()
+node_t *getPow()
 {
-    node_t *val  = getP();
+    node_t *val  = getBrackets();
     node_t *val1 = 0;
     node_t *returningNode = val;
 
     if(s[p] == '^')
     {
         p++;
-        val1 = getP();
+        val1 = getBrackets();
 
         returningNode = make_element();
 
-        returningNode->data.nodeType = FUNC;
-        returningNode->data.data     = POW;
+        returningNode->data.nodeType      = FUNC;
+        returningNode->data.nodeData.func = POW;
 
         returningNode->right = val ;
         returningNode->left  = val1;       
@@ -164,6 +176,7 @@ node_t *getS()
 
 
 
+ 
 node_t *getStr()
 {
     char funk_name[FUNK_NAME_SIZE] = {};
@@ -183,11 +196,11 @@ node_t *getStr()
     {
         printf("p = %d\n", p);
         p++;
-        node_t *param = getE();
+        node_t *param = getSumSub();
         node_t *func_node = make_element();
         
-        func_node->data.nodeType = FUNC;
-        func_node->data.data     = findfunc(funk_name);
+        func_node->data.nodeType      = FUNC;
+        func_node->data.nodeData.func = findfunc(funk_name);
         func_node->right         = param;
 
         if (s[p] != ')') assert(0);
@@ -200,15 +213,19 @@ node_t *getStr()
     {
         node_t *var_node  = make_element();
 
-        var_node->data.nodeType = VARIABLE;
-        var_node->data.data     = findVar(funk_name);
+        var_node->data.nodeType     = VARIABLE;
+        var_node->data.nodeData.var = findVar(funk_name);
 
         return var_node;
     }
 }
 
+
 int findfunc(char * const funcName)
 {
+
+    strcasecmp(NULL, NULL);
+
     printf("funk_name = %s\n", funcName);
     for(int i = 0; i < NUM_OF_FUNK; i ++)
     {
