@@ -55,28 +55,32 @@ int dif_calc_f(node_t *currNode, tree_t *currTree)
         return 0;
     }
     //__________________________________________ CODEGEN
-    if ( (currNode->right->data.nodeData.func == SUM) || 
-         (currNode->right->data.nodeData.func == SUB)         )
+    switch (currNode->right->data.nodeData.func)
     {
-        dif_sum_sub(currNode, currTree);        
+        case SUM:
+        case SUB:
+            dif_sum_sub(currNode, currTree);
+            break;
+        case MUL:
+            dif_mul(currNode, currTree);
+            break;
+        case DIV:
+            dif_div(currNode, currTree);
+            break;
+        case COS:
+        case SIN:
+            dif_geom(currNode, currTree);
+            break;
+        case LN:
+            dif_LN(currNode, currTree);
+            break;
+        case POW:
+            dif_POW(currNode, currTree);
+            break;        
+        default:
+            printf("no such funck %d", currNode->right->data.nodeData.func);
+        return ;
     }
-
-    if ( currNode->right->data.nodeData.func == MUL)
-    {   
-        dif_mul(currNode, currTree);
-    }
-
-    if ( currNode->right->data.nodeData.func == DIV)
-    {   
-        dif_div(currNode, currTree);
-    } 
-
-    if ( currNode->right->data.nodeData.func == COS || 
-         currNode->right->data.nodeData.func == SIN              )
-    {
-        dif_geom(currNode, currTree);
-    }
-
 
     dif_calc_f(currNode->right, currTree);
     dif_calc_f(currNode->left , currTree);
@@ -164,9 +168,7 @@ node_t *dif_div(node_t *currNode,  tree_t *currTree)
     dif_mul(difL, currTree);
     generate_html(currTree);
 
-    difL->data.nodeData.func = SUB;
-
-    
+    difL->data.nodeData.func = SUB; 
 
     return currNode;
 }
@@ -182,7 +184,7 @@ node_t *dif_const(node_t *currNode,  tree_t *currTree)
     return currNode;
 }
 
-node_t *dif_LN(node_t *currNode,  tree_t *currTree)
+node_t *dif_LN (node_t *currNode,  tree_t *currTree)
 {
     currNode->data.nodeData.func = DIV;
     currNode->left = currNode->right;
@@ -190,9 +192,31 @@ node_t *dif_LN(node_t *currNode,  tree_t *currTree)
 
     currNode->right = currNode->right->right;
     
-    currNode->left->right = copyNode(currNode->right, currTree);
+    currNode->left->right = copyNode (currNode->right, currTree);
 
     return currNode;    
+}
+
+node_t *dif_POW (node_t *currNode,  tree_t *currTree)
+{
+    double pow = currNode->right->right->data.nodeData.cnst;
+    currNode->right->right->data.nodeData.cnst -= 1;
+
+    node_t *currR = currNode->right;
+    node_t *currL = currNode->left;
+
+    node_t *mul1 = currNode;
+    mul1->data.nodeData.func = MUL;
+    node_t *mul2 = make_mul_node();
+    mul1->left = mul2;
+    mul1->right = make_dif_node();
+    mul1->right->right = copyNode(currL->left, currTree);
+
+    mul2->left = currR->left;
+    mul2->right = make_const_node();
+    mul2->right->data.nodeData.cnst = pow;
+
+    return currNode;
 }
 
 
@@ -227,6 +251,15 @@ node_t *make_mul_node()
     node_t *dif_1 = make_element();
     dif_1->data.nodeType = FUNC;
     dif_1->data.nodeData.func     = MUL;        
+
+    return dif_1;
+}
+
+node_t *make_const_node()
+{
+    node_t *dif_1 = make_element();
+    dif_1->data.nodeType = CONST;
+    dif_1->data.nodeData.func = 0;        
 
     return dif_1;
 }
