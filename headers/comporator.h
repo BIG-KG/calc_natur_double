@@ -10,7 +10,7 @@ node_t *getMulDiv();
 node_t *getBrackets();
 node_t *getDouble();
 node_t *getPow();
-int    findfunc (char * const funcName);
-int    findVar  (char * const valName);
+int     findfunc (char * const funcName);
+char    findVar  (char * const valName);
 
 #endif /*COMPORATOR_F*/

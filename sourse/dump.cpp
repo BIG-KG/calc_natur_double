@@ -74,13 +74,16 @@ void print_node(node_t *curr_node, FILE *txtFile)
     }
     else if(curr_node->data.nodeType == VARIABLE)
     {
-        fprintf (txtFile, ", label = \"x\" ]; \n");
+        fprintf (txtFile, ", label = \"%c\" ]; \n", curr_node->data.nodeData.var);
     }
     else if(curr_node->data.nodeType == FUNC)
     {
         fprintf (txtFile, ", label = \"%s\" ]; \n", funcs[curr_node->data.nodeData.func]);
     }
-
+    else
+    {
+        fprintf (txtFile, ", label = \"%d\" ]; \n", curr_node->data.nodeType);
+    }
 
     if(curr_node->left != NULL)
     {   

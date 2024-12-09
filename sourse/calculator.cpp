@@ -13,22 +13,29 @@ static node_t *dif_const (node_t *currNode,  tree_t *currTree);
 static node_t *dif_geom  (node_t *currNode,  tree_t *currTree);
 static node_t *dif_var   (node_t *currNode,  tree_t *currTree);
 
+static int easy_const_val     (node_t *currNode);
+static int set_to_zero_node_t (node_t *settingNode);
+static int dell_const_node_t  (node_t *destNode, node_t *sourseNode);
+static int easy_const_const   (node_t *currNode);
+
+
+
 enum easer
 {
     NO_CHANGES,
-    HAS_CHANGES
+    DELL_ALL_NODE,
+    DELL_CONST_NODE
 };
 
 int dif_calc_f(node_t *currNode, tree_t *currTree)
 {
     if(currNode == NULL) return 0;
-    generate_html(currTree);
 
     void *start = currNode;
     if ( !(currNode->data.nodeType == FUNC && currNode->data.nodeData.func == DIF) )
     {   
         dif_calc_f(currNode->left,  currTree);
-                                                                                                                                                                                                                    (currNode->right, currTree);
+        dif_calc_f(currNode->right, currTree);
         return 0;
     }
     //printf("\n\ndiff\n");
@@ -37,16 +44,17 @@ int dif_calc_f(node_t *currNode, tree_t *currTree)
     {
         dif_const(currNode, currTree);
         printf("^^^^^^^\n");
+        generate_html(currTree);
         return 0;
     }
 
     if(currNode->right->data.nodeType == VARIABLE)
     {
         dif_var(currNode, currTree);
-        printf("\n********\n");
+        generate_html(currTree);
         return 0;
     }
-
+    //__________________________________________ CODEGEN
     if ( (currNode->right->data.nodeData.func == SUM) || 
          (currNode->right->data.nodeData.func == SUB)         )
     {
@@ -69,15 +77,16 @@ int dif_calc_f(node_t *currNode, tree_t *currTree)
         dif_geom(currNode, currTree);
     }
 
+
     dif_calc_f(currNode->right, currTree);
     dif_calc_f(currNode->left , currTree);
 
+    generate_html(currTree);
     return 0;
 }
 
 node_t *dif_sum_sub(node_t *currNode,  tree_t *currTree)
 {
-    printf("_________sum|sub__________");
     node_t *leftNew = make_element();
     leftNew->data.nodeType = FUNC;
     leftNew->data.nodeData.func = DIF;
@@ -96,7 +105,6 @@ node_t *dif_sum_sub(node_t *currNode,  tree_t *currTree)
 
 node_t *dif_mul(node_t *currNode,  tree_t *currTree)
 {
-    printf("_________mul__________");
     node_t *right_o = currNode->right->right;
     node_t *left_o  = currNode->right->left ;
 
@@ -113,59 +121,58 @@ node_t *dif_mul(node_t *currNode,  tree_t *currTree)
     currNode->right = mul_2;
     currNode->left  = mul_1;
 
-    mul_2->left  = right_o;
+    mul_2->left  = left_o;
     mul_2->right = dif_2;
-    dif_2->right = left_c;
+    dif_2->right = right_c;
 
     mul_1->right = dif_1;
-    dif_1->right = right_c;
-    mul_1->left  = left_o;
+    dif_1->right = left_c;
+    mul_1->left  = right_o;
 
-    printf("end_mul\n");
     return currNode;
 }
 
 node_t *dif_geom(node_t *currNode,  tree_t *currTree)
 {
-    printf("_________geom__________");
     node_t *right = NULL;
     node_t *Ldif  = make_dif_node();
     Ldif->right   = copyNode(currNode->right->right, currTree);
     currNode->left = Ldif;
 
     currNode->data.nodeData.func = MUL;
-    if (currNode->right->data.nodeData.func = COS) currNode->right->data.nodeData.func = SIN;
-    else                                           currNode->right->data.nodeData.func = COS;
+    if (currNode->right->data.nodeData.func == COS) currNode->right->data.nodeData.func = SIN;
+    else                                            currNode->right->data.nodeData.func = COS;
 
     return currNode;
 }
 
 node_t *dif_div(node_t *currNode,  tree_t *currTree)
 {
-    printf("_________div__________");
     node_t *difL = make_dif_node();
     node_t *mulR = make_mul_node();
     
     mulR->right  = copyNode (currNode->right->right, currTree);
     mulR->left   = copyNode (mulR->right,            currTree);
 
-    currNode->data.nodeData.func = DIV;
-    currNode->left      = mulR;
-
     difL->right     = currNode->right;
-    currNode->right = difL;
-    difL->right->data.nodeData.func = MUL;
+    currNode->data.nodeData.func = DIV;
+    currNode->right   = mulR;
 
+    currNode->left = difL;
+    difL->right->data.nodeData.func = MUL;
+    generate_html(currTree);
     dif_mul(difL, currTree);
+    generate_html(currTree);
 
     difL->data.nodeData.func = SUB;
+
+    
 
     return currNode;
 }
 
 node_t *dif_const(node_t *currNode,  tree_t *currTree)
 {
-    printf("_________const__________");    
     delete_tree (currNode->right);
     delete_tree (currNode->left );
     currNode->right = NULL;
@@ -175,15 +182,34 @@ node_t *dif_const(node_t *currNode,  tree_t *currTree)
     return currNode;
 }
 
-node_t *dif_var(node_t *currNode,  tree_t *currTree)
+node_t *dif_LN(node_t *currNode,  tree_t *currTree)
 {
-    printf("_________var_________");
-    delete_tree (currNode->right);
-    delete_tree (currNode->left );
-    currNode->right = NULL;
-    currNode->data.nodeData.cnst = 1;
-    currNode->data.nodeType = CONST;
+    currNode->data.nodeData.func = DIV;
+    currNode->left = currNode->right;
+    currNode->left->data.nodeData.func = DIV;
 
+    currNode->right = currNode->right->right;
+    
+    currNode->left->right = copyNode(currNode->right, currTree);
+
+    return currNode;    
+}
+
+
+node_t *dif_var (node_t *currNode,  tree_t *currTree)
+{
+    if(currNode->right->data.nodeData.var == 'x')
+    {    
+        delete_tree (currNode->right);
+        delete_tree (currNode->left );
+        currNode->right = NULL;
+        currNode->data.nodeData.cnst = 1;
+        currNode->data.nodeType = CONST;
+    }
+    else  
+    {
+        dif_const (currNode, currTree);
+    }
     return currNode; 
 }
 
@@ -216,19 +242,37 @@ int isOperation(node_t *currNode)
     return 0;
 }
 
-int easy_const_val  (node_t *currNode)
-{
-    if (currNode == NULL)  return NO_CHANGES;
-    if (currNode->left == NULL || currNode->right == NULL) return NO_CHANGES;
+int ease_tree (node_t *currNode)
+{   
+    if(currNode == NULL) return NO_CHANGES;
 
-    if(  (currNode->left->data.nodeType  == CONST || 
-          currNode->right->data.nodeType == CONST   ) &&   
+    ease_tree (currNode->left);
+    ease_tree (currNode->right);
+
+    int nodeChanges = NO_CHANGES;
+
+    if ( (nodeChanges = easy_const_val   (currNode)) != NO_CHANGES) return nodeChanges;
+    if ( (nodeChanges = easy_const_const (currNode)) != NO_CHANGES) return nodeChanges;
+
+    return NO_CHANGES;
+}
+
+int easy_const_val (node_t *currNode)
+{   
+    if (currNode == NULL)                                  return NO_CHANGES;
+    if (currNode->left == NULL || currNode->right == NULL) return NO_CHANGES;
+    if (currNode->left->data.nodeType  == CONST   &&
+          currNode->right->data.nodeType == CONST     )      return NO_CHANGES;
+
+    double  currConst = 0.0;
+    node_t *notConst = NULL;
+    int     changeType = NO_CHANGES;
+
+    if (  (currNode->left->data.nodeType  == CONST || 
+           currNode->right->data.nodeType == CONST   ) &&   
           isOperation(currNode)                             )
     {
-        double currConst = 0.0;
-        node_t *notConst = NULL;
-
-        if(currNode->left->data.nodeType  == CONST)
+        if (currNode->left->data.nodeType == CONST)
         {
             currConst = currNode->left->data.nodeData.cnst;
             notConst  = currNode->right;
@@ -236,55 +280,105 @@ int easy_const_val  (node_t *currNode)
 
         else
         {
+            //printf("start ease===============r\n\n");
             currConst = currNode->right->data.nodeData.cnst;
             notConst  = currNode->left;
         }
 
-        switch (currNode->data.nodeType)
+        switch (currNode->data.nodeData.func)
         {
+        //__________________________________________ CODEGEN + CODE
         case SUM:
-            if (currConst != 0) break;
-        case MUL:
-            if (currConst != 1) break;
-            currNode->data = notConst->data;
-            currNode->left  = NULL;
-            currNode->right = NULL;
-        
-        default:
+            printf("const = %lf\n", currConst);
+            if (currConst == 0.0) 
+            {
+                changeType = DELL_CONST_NODE;
+                printf("dcsc\n");
+            }
             break;
+        case SUB:
+            if (currConst == 0.0 && notConst == currNode->left) changeType = DELL_CONST_NODE;
+            break;
+        case MUL:
+            printf("MUL");
+            if (currConst == 1.0) changeType = DELL_CONST_NODE;
+            if (currConst == 0.0) changeType = DELL_ALL_NODE;
+            break;
+        case DIV:
+            if (currConst == 0.0 && notConst == currNode->right) changeType = DELL_ALL_NODE;
+            if (currConst == 1.0 && notConst == currNode->left)  changeType = DELL_CONST_NODE;
+            break;
+        //__________________________________________ CODEGEN + CODE      
+        default:
+            return NO_CHANGES;
         }
     }
+
+      if (changeType == DELL_ALL_NODE  ) return set_to_zero_node_t (currNode);
+      if (changeType == DELL_CONST_NODE) return dell_const_node_t  (currNode, notConst);
+      return NO_CHANGES;
+
+    
 }
 
-int easy_const_const(node_t *currNode)
+static int set_to_zero_node_t (node_t *settingNode)
+{
+    if (settingNode == NULL) return NULL_PTR_VALUE;
+
+    delete_tree(settingNode->left );
+    delete_tree(settingNode->right);
+
+    settingNode->left  = NULL;
+    settingNode->right = NULL;
+
+    settingNode->data.nodeType      = CONST;
+    settingNode->data.nodeData.cnst = 0.0;
+
+    return 0;
+}
+
+static int dell_const_node_t (node_t *destNode, node_t *sourseNode)
+{
+    if (destNode == NULL || sourseNode == NULL) return NO_CHANGES;
+
+    node_t *right = destNode->right;
+    node_t *left  = destNode->left;
+
+    destNode->data  = sourseNode->data;
+    destNode->left  = sourseNode->left;
+    destNode->right = sourseNode->right;
+
+    if (right != NULL) free (right);
+    if (left  != NULL) free(left);
+
+    return 0;
+}
+
+int easy_const_const (node_t *currNode)
 {   
     if (currNode == NULL)  return NO_CHANGES;
     if (currNode->left == NULL || currNode->right == NULL) return NO_CHANGES;
 
-    if( currNode->left->data.nodeType  == CONST && 
+    if ( currNode->left->data.nodeType  == CONST && 
         currNode->right->data.nodeType == CONST &&   
         isOperation(currNode)                       )
     {
-        double righCons = currNode->right->data.nodeType;
-        double leftCons = currNode->left-> data.nodeType;
+        double righCons = currNode->right->data.nodeData.cnst;
+        double leftCons = currNode->left-> data.nodeData.cnst;
 
         switch (currNode->data.nodeData.func)
         {
-        case SUM:
-            currNode->data.nodeData.cnst = righCons + leftCons;
-            break;
 
-        case SUB:
-            currNode->data.nodeData.cnst = righCons - leftCons;
-            break;
-
-        case MUL:
-            currNode->data.nodeData.cnst = righCons * leftCons;
+        //__________________________________________ CODEGEN
+        #define GENER(F_NAME, str_name)                         \
+        case F_NAME:
+            currNode->data.nodeData.cnst = righCons #str_name leftCons;
             break;
         
         case DIV:
             currNode->data.nodeData.cnst = righCons / leftCons;
             break;
+        //__________________________________________ CODEGEN
         
         default:
             break;
@@ -293,10 +387,14 @@ int easy_const_const(node_t *currNode)
 
         delete_tree(currNode->right);
         delete_tree(currNode->left );
+
+        currNode->data.nodeType = CONST; 
+
+        currNode->left  = NULL;
+        currNode->right = NULL;
     
-        return HAS_CHANGES;
+        return DELL_CONST_NODE;
     }
 
     return NO_CHANGES;
 }
-

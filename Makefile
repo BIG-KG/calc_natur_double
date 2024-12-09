@@ -1,13 +1,16 @@
 all: hello
 
-hello:  main.o three_funk.o stackfunk.o canary.o const.o dump.o calculator.o parcer.o
-	g++ main.o three_funk.o stackfunk.o canary.o const.o dump.o calculator.o parcer.o -o hell.exe
+hello:  main.o three_funk.o stackfunk.o canary.o const.o dump.o calculator.o parcer.o dumpTex.o
+	g++ main.o three_funk.o stackfunk.o canary.o const.o dump.o calculator.o parcer.o dumpTex.o -o hell.exe
 
 main.o:    main.cpp
 	g++ -c main.cpp
 
 three_funk.o: sourse\\three_funk.cpp
 	g++ -c    sourse\\three_funk.cpp
+
+dumpTex.o: sourse\\dumpTex.cpp
+	g++ -c    sourse\\dumpTex.cpp
 
 stackfunk.o: stack\\stackfunk.cpp
 	g++ -c   stack\\stackfunk.cpp

@@ -21,7 +21,7 @@ extern char funcs[][20];
 
 int p = 0;
 
-//char s[100] = "d((x+1)/(x*x))$";
+//char s[100] = "d(x)$";
 
 char s[100] = "d((x+1)/(x*x))$";
 
@@ -239,7 +239,7 @@ int findfunc(char * const funcName)
     return -1;
 }
 
-int findVar(char * const valName)
-{ 
-    return 1;
+char findVar(char * const valName)
+{   
+    return (*valName);
 }

@@ -18,7 +18,7 @@ enum {
     UND_BEH
 };
 
-
+extern char funcs[][20];
 
 node_t *make_node (FILE *loading_file, int *errorStream, tree_t *currTree)
 {

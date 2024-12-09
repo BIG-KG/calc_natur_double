@@ -18,8 +18,14 @@ extern char funcs[][20];
 
 int main()
 {
-    strcpy(funcs[SIN], NAME_STR(SIN));
-    strcpy(funcs[COS], NAME_STR(COS));
+    #define GENER(TYPE, str_name)                               \
+        strcpy(funcs[TYPE], NAME_STR(TYPE));                    \
+
+    #define ALL_FUNKS
+    #include ".\sourse\codegen.cpp"
+    #undef ALL_FUNKS
+    #undef GENER
+
     strcpy(funcs[SUB], "-");
     strcpy(funcs[SUM], "+");
     strcpy(funcs[DIV], "/");
@@ -31,6 +37,8 @@ int main()
     node_t *test = getMain();
     testTree.treeStart = test;
 
+    printTex(&testTree);
+
     generate_html(&testTree);
 
     dif_calc_f(testTree.treeStart, &testTree);
@@ -38,6 +46,12 @@ int main()
     printf("end\n");
 
     generate_html(&testTree);
+
+    ease_tree(testTree.treeStart);
+
+    generate_html(&testTree);
+
+    printf("end2________\n");
 
     return 0;
 

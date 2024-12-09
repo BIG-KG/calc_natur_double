@@ -22,7 +22,13 @@ enum funcs
     DIV,
     MUL,
     POW,
-    LOG
+    LN,
+    ASIN,
+    ACOS,
+    TNG,
+    CTG,
+    ATNG,
+    ACTG,
 };
 
 union calc_node_data
