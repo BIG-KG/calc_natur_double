@@ -10,7 +10,9 @@ int     generate_html (tree_t *tree);
 int     printing_dump (node_t *node);
 char   *generate_png  (tree_t *dumpingTree, int dumpNum);
 void    print_node    (node_t *curr_node, FILE *txt_file);
-int     printTex      (tree_t *currTree);
+int     printTex      (tree_t *currTree, FILE *outputFile);
+int     makeTex       (FILE *outputFile);
+
 
 
 int     delete_tree   (node_t *deleatingNode);

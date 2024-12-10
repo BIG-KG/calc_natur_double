@@ -5,3 +5,11 @@
 *.txt
 *.png
 *.html
+*.pdf
+*.tex
+*.log
+*.gz
+*provxml
+*.appx
+*.aux
+*.xml

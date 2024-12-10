@@ -13,13 +13,21 @@ extern char funcs[][20];
 static int printTex_rec(node_t *currNode, FILE *outputFile);
 
 
-int printTex(tree_t *currTree)
-{
-    FILE *texoutput_tex = fopen("texoutput.tex", "w");
+int printTex(tree_t *currTree, FILE *texoutput_tex)
+{      
+    static int numOfLaunches = 0;
 
+    if (numOfLaunches == 0)
+    {   
+        fprintf(texoutput_tex, "\\documentclass[a4paper]{article} \n\\begin{document} \n");
+    }
+    numOfLaunches ++;
+
+    fprintf(texoutput_tex, "$");
     printTex_rec(currTree->treeStart, texoutput_tex);
+    fprintf(texoutput_tex, "$");
 
-    fclose(texoutput_tex);
+    fprintf(texoutput_tex, "\\\\\n");
 
     return 0;
 }
@@ -38,7 +46,7 @@ static int printTex_rec(node_t *currNode, FILE *outputFile)
 
     if (currNode->data.nodeType == CONST) 
     {
-        fprintf(outputFile, "%lf", currNode->data.nodeData.cnst);
+        fprintf(outputFile, "%lg", currNode->data.nodeData.cnst);
         return 0;
     }
 
@@ -71,7 +79,7 @@ static int printTex_rec(node_t *currNode, FILE *outputFile)
                 fprintf(outputFile, ", ");                      \
                 printTex_rec(leftNodeFunk->right, outputFile);  \
                 leftNodeFunk = leftNodeFunk->left;}             \
-            printf(") ");                                       \
+            fprintf(outputFile, ") ");                                       \
             break;                                              \
 
         #define ALL_FUNKS
@@ -105,4 +113,14 @@ static int printTex_rec(node_t *currNode, FILE *outputFile)
     }
 
     return 1;
+}
+
+int makeTex(FILE *outputFile)
+{
+    fprintf(outputFile, "\\end{document}");
+    fclose(outputFile);
+
+    system("pdflatex C:\\MIPT\\Differenciator\\tex_file.tex");
+
+    return 0;
 }

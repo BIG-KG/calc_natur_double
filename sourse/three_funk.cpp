@@ -8,7 +8,6 @@
 
 node_t *make_element(void)
 {
-    printf("make node\n");
     node_t *tmpPntr_ = (node_t *)calloc(1, sizeof(node_t));
 
     if (tmpPntr_ == NULL)

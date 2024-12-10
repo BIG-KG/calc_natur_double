@@ -37,19 +37,26 @@ int main()
     node_t *test = getMain();
     testTree.treeStart = test;
 
-    printTex(&testTree);
-
-    generate_html(&testTree);
-
     dif_calc_f(testTree.treeStart, &testTree);
 
-    printf("end\n");
 
+    //generate_html(&testTree);
+
+   // ease_tree(testTree.treeStart);
+
+    printf("end1_____________\n");
     generate_html(&testTree);
+
+    FILE *texoutput_tex = fopen("tex_file.tex", "w");
 
     ease_tree(testTree.treeStart);
 
-    generate_html(&testTree);
+    printTex(&testTree, texoutput_tex);
+    printTex(&testTree, texoutput_tex);
+    printTex(&testTree, texoutput_tex);
+    makeTex(texoutput_tex);
+
+    fclose(texoutput_tex);
 
     printf("end2________\n");
 
