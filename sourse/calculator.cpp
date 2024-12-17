@@ -22,7 +22,7 @@ static int easy_const_const   (node_t *currNode);
 static int easy_pov_pov       (node_t *currNode);
 static int easy_pov_val       (node_t *currNode);
 
-xx
+
 enum easer
 {
     NO_CHANGES,
@@ -147,14 +147,23 @@ node_t *dif_mul(node_t *currNode,  tree_t *currTree)
 
 node_t *dif_geom(node_t *currNode,  tree_t *currTree)
 {
-    node_t *right = NULL;
-    node_t *Ldif  = make_dif_node();
+    node_t *right    = NULL;
+    node_t *Ldif     = make_dif_node();
+    node_t *tmprNode = NULL;
     Ldif->right   = copyNode(currNode->right->right, currTree);
     currNode->left = Ldif;
 
     currNode->data.nodeData.func = MUL;
-    if (currNode->right->data.nodeData.func == COS) currNode->right->data.nodeData.func = SIN;
-    else                                            currNode->right->data.nodeData.func = COS;
+    if (currNode->right->data.nodeData.func == SIN) currNode->right->data.nodeData.func = COS;
+    else
+    {  
+        tmprNode = make_mul_node();
+        currNode->right->data.nodeData.func = SIN;
+        tmprNode->right = currNode->right;
+        tmprNode->left  = make_const_node();
+        tmprNode->left->data.nodeData.cnst = -1;
+        currNode->right = tmprNode;
+    }
 
     return currNode;
 }
@@ -426,14 +435,12 @@ int easy_const_val (node_t *currNode)
 
         else
         {
-            //printf("start ease===============r\n\n");
             currConst = currNode->right->data.nodeData.cnst;
             notConst  = currNode->left;
         }
 
         switch (currNode->data.nodeData.func)
         {
-        //__________________________________________ CODEGEN + CODE
         case SUM:
             if (currConst == 0.0) 
             {
@@ -451,7 +458,6 @@ int easy_const_val (node_t *currNode)
             if (currConst == 0.0 && notConst == currNode->right) changeType = DELL_ALL_NODE;
             if (currConst == 1.0 && notConst == currNode->left)  changeType = DELL_CONST_NODE;
             break;
-        //__________________________________________ CODEGEN + CODE      
         default:
             return NO_CHANGES;
         }

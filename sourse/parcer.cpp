@@ -13,8 +13,9 @@
 #include "..\headers\calculator.h"
 #include "..\headers\comporator.h"
 
-const int FUNK_NAME_SIZE = 30;
-const int NUM_OF_FUNK    = 20;
+const int FUNK_NAME_SIZE      = 30;
+const int NUM_OF_FUNK         = 20;
+const int MAK_EXPRESSION_SIZE = 1024;
 
 #define NAME_STR(a)  #a
 extern char funcs[][20];
@@ -85,18 +86,18 @@ static node_t *getSumSub(char *parcingString, int *crrPtr)
 node_t *getMain(char *inputParcingString)
 {   
     printf("start main\n");
-    char parcingString[100] = "d(ln(sin(x^3)^2))$";
+    char parcingString[MAK_EXPRESSION_SIZE] = "d(ln(sin(x^3)^2))";
     int crrPtr = 0;
 
     if (inputParcingString != NULL) strcpy(parcingString, inputParcingString);
 
     node_t *val = getSumSub(parcingString, &crrPtr);
-    if(parcingString[crrPtr] != '$')  assert(0);
+    if(parcingString[crrPtr] != '\0')  assert(0);
     return val;
 }
 
 node_t *getDouble(char *parcingString, int *crrPtr)
-{
+{   
     printf("start double\n");
 
     if( isalpha(parcingString[*crrPtr]) ) return getStr(parcingString, crrPtr);

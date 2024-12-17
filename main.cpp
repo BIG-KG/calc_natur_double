@@ -42,7 +42,10 @@ void funckArray_init()
 int main()
 {
     tree_t testTree = {};
-    node_t *test = NULL;
+    node_t *test    = NULL;
+    dumpingFile     = fopen("tex_file.tex", "w");
+
+
     printf("To use your value print YES to load your print NO\n");
     if(yes_no_scan() == 0)
     {
@@ -60,11 +63,11 @@ int main()
 
     testTree.treeStart = test;
 
-    dumpingFile = fopen("tex_file.tex", "w");
+    printTex(&testTree, dumpingFile);
 
-    dif_calc_f(testTree.treeStart, &testTree, dumpingFile);
+    //dif_calc_f(testTree.treeStart, &testTree, dumpingFile);
 
-    ease_tree(testTree.treeStart);
+    //ease_tree(testTree.treeStart);
 
     makeTex(dumpingFile);
 
