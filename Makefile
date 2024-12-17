@@ -1,34 +1,18 @@
-all: hello
+SRCS = $(wildcard sourse/*.cpp)
 
-hello:  main.o three_funk.o stackfunk.o canary.o const.o dump.o calculator.o parcer.o dumpTex.o
-	g++ main.o three_funk.o stackfunk.o canary.o const.o dump.o calculator.o parcer.o dumpTex.o -o hell.exe
+OBJS = $(SRCS:.cpp=.o)
 
-main.o:    main.cpp
-	g++ -c main.cpp
+all: hello 
 
-three_funk.o: sourse\\three_funk.cpp
-	g++ -c    sourse\\three_funk.cpp
+hello: $(OBJS)
+	g++ $(OBJS) main.o -o hell.exe
 
-dumpTex.o: sourse\\dumpTex.cpp
-	g++ -c    sourse\\dumpTex.cpp
+main.o: main.cpp
+	g++ -I ./headers main.cpp
 
-stackfunk.o: stack\\stackfunk.cpp
-	g++ -c   stack\\stackfunk.cpp
-
-parcer.o:	sourse\\parcer.cpp
-	g++ -c  sourse\\parcer.cpp
-
-canary.o:	stack\\canary.cpp
-	g++ -c  stack\\canary.cpp
-
-const.o:	stack\\const.cpp
-	g++ -c 	stack\\const.cpp
-
-dump.o:    sourse\dump.cpp
-	g++ -c sourse\dump.cpp
-
-calculator.o: sourse\calculator.cpp
-	g++ -c    sourse\calculator.cpp
+%.o: %.cpp
+	g++ -I ./headers -c $< -o $@
 
 clean:
-	rm -rf *.o hello2
+	DEL *.o
+	DEL *.exe

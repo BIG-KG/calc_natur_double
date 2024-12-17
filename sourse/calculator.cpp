@@ -12,14 +12,17 @@
 static node_t *dif_const (node_t *currNode,  tree_t *currTree);
 static node_t *dif_geom  (node_t *currNode,  tree_t *currTree);
 static node_t *dif_var   (node_t *currNode,  tree_t *currTree);
+static node_t *dif_arcsin_arccos(node_t *currNode,  tree_t *currTree);
+
 
 static int easy_const_val     (node_t *currNode);
 static int set_to_zero_node_t (node_t *settingNode);
 static int dell_const_node_t  (node_t *destNode, node_t *sourseNode);
 static int easy_const_const   (node_t *currNode);
+static int easy_pov_pov       (node_t *currNode);
+static int easy_pov_val       (node_t *currNode);
 
-
-
+xx
 enum easer
 {
     NO_CHANGES,
@@ -27,15 +30,15 @@ enum easer
     DELL_CONST_NODE
 };
 
-int dif_calc_f(node_t *currNode, tree_t *currTree)
+int dif_calc_f(node_t *currNode, tree_t *currTree, FILE *dumpFile)
 {
     if(currNode == NULL) return 0;
 
     void *start = currNode;
     if ( !(currNode->data.nodeType == FUNC && currNode->data.nodeData.func == DIF) )
     {   
-        dif_calc_f(currNode->left,  currTree);
-        dif_calc_f(currNode->right, currTree);
+        dif_calc_f(currNode->left,  currTree, dumpFile);
+        dif_calc_f(currNode->right, currTree, dumpFile);
         return 0;
     }
     //printf("\n\ndiff\n");
@@ -44,6 +47,7 @@ int dif_calc_f(node_t *currNode, tree_t *currTree)
     {
         dif_const(currNode, currTree);
         //generate_html(currTree);
+        printTex(currTree, dumpFile);
         return 0;
     }
 
@@ -51,6 +55,7 @@ int dif_calc_f(node_t *currNode, tree_t *currTree)
     {
         dif_var(currNode, currTree);
         //generate_html(currTree);
+        printTex(currTree, dumpFile);
         return 0;
     }
     switch (currNode->right->data.nodeData.func)
@@ -74,14 +79,20 @@ int dif_calc_f(node_t *currNode, tree_t *currTree)
             break;
         case POW:
             dif_POW(currNode, currTree);
-            break;        
+            break;
+        case ASIN:
+        case ACOS:
+            dif_arcsin_arccos(currNode, currTree);
+            break;
         default:
             printf("no such funck %d", currNode->right->data.nodeData.func);
         return 0;
     }
 
-    dif_calc_f(currNode->right, currTree);
-    dif_calc_f(currNode->left , currTree);
+    printTex(currTree, dumpFile);
+
+    dif_calc_f(currNode->right, currTree, dumpFile);
+    dif_calc_f(currNode->left , currTree, dumpFile);
 
     //generate_html(currTree);
     return 0;
@@ -148,6 +159,45 @@ node_t *dif_geom(node_t *currNode,  tree_t *currTree)
     return currNode;
 }
 
+node_t *dif_arcsin_arccos(node_t *currNode,  tree_t *currTree)
+{
+    printf("asinacos__________\n");
+    double sign = 0;
+    if(currNode->right->data.nodeData.func == ASIN)
+    {
+        sign = 1.0;
+    }
+    else
+    {
+        sign = -1.0;
+    }
+    
+    currNode->data.nodeData.func = MUL;
+    currNode->right->data.nodeData.func = DIV;
+    node_t *sqrt = make_val_node(FUNC,  (double)POW);
+    node_t *sum  = make_val_node(FUNC,  (double)SUB);
+    sqrt->right  = make_val_node(CONST, 0.5);
+
+    sqrt->left  = sum;
+    sum->left = make_val_node(CONST, 1.0);
+
+    node_t *x2 = make_val_node(FUNC, (double)POW);
+    x2->right  = make_val_node(CONST, 2.0);
+    x2->left   = currNode->right->right; 
+
+    sum->right = x2;
+
+    currNode->left = make_dif_node();
+    currNode->left->right = copyNode (sum->right->left, currTree);
+
+    currNode->right->right = sqrt;
+    currNode->right->left  =make_val_node(CONST, sign); 
+
+    //generate_html(currTree);
+
+    return currNode;
+}
+
 node_t *dif_div(node_t *currNode,  tree_t *currTree)
 {
     node_t *difL = make_dif_node();
@@ -184,11 +234,13 @@ node_t *dif_LN (node_t *currNode,  tree_t *currTree)
 {
     currNode->data.nodeData.func = DIV;
     currNode->left = currNode->right;
-    currNode->left->data.nodeData.func = DIV;
+    currNode->left->data.nodeData.func = DIF;
 
-    currNode->right = currNode->right->right;
-    
-    currNode->left->right = copyNode (currNode->right, currTree);
+    //generate_html(currTree);
+
+    currNode->right = copyNode(currNode->left->right, currTree);
+
+    //generate_html(currTree);
 
     return currNode;    
 }
@@ -198,17 +250,18 @@ node_t *dif_POW (node_t *currNode,  tree_t *currTree)
     double pow = currNode->right->right->data.nodeData.cnst;
     currNode->right->right->data.nodeData.cnst -= 1;
 
+
     node_t *currR = currNode->right;
-    node_t *currL = currNode->left;
+    node_t *currL = currNode->right->left;
 
     node_t *mul1 = currNode;
     mul1->data.nodeData.func = MUL;
     node_t *mul2 = make_mul_node();
     mul1->left = mul2;
     mul1->right = make_dif_node();
-    mul1->right->right = copyNode(currL->left, currTree);
+    mul1->right->right = copyNode(currL, currTree);
 
-    mul2->left = currR->left;
+    mul2->left = currR;
     mul2->right = make_const_node();
     mul2->right->data.nodeData.cnst = pow;
 
@@ -298,9 +351,57 @@ int ease_tree (node_t *currNode)
 
     if ( (nodeChanges = easy_const_val   (currNode)) != NO_CHANGES) return nodeChanges;
     if ( (nodeChanges = easy_const_const (currNode)) != NO_CHANGES) return nodeChanges;
+    if ( (nodeChanges = easy_pov_val     (currNode)) != NO_CHANGES) return nodeChanges;
+    if ( (nodeChanges = easy_pov_pov     (currNode)) != NO_CHANGES) return nodeChanges;
 
     return NO_CHANGES;
 }
+
+int easy_pov_pov (node_t *currNode)
+{   
+    if (currNode == NULL)                                  return NO_CHANGES;
+    if (    currNode->data.nodeData.func != POW       || 
+            currNode->data.nodeType != FUNC           ||
+            currNode->left->data.nodeType != FUNC     ||
+            currNode->left->data.nodeData.func != POW    )           return NO_CHANGES;
+
+    node_t *value = currNode->left->left;
+    currNode->left->data.nodeData.func = MUL;
+    currNode->left->left = currNode->right;
+    currNode->right = currNode->left;
+    currNode->left = value;
+
+    ease_tree(currNode->right);
+
+    return DELL_CONST_NODE;    
+} 
+
+
+int easy_pov_val (node_t *currNode) 
+{
+    if (currNode == NULL)                                  return NO_CHANGES;
+    if (currNode->data.nodeData.func != POW || 
+            currNode->data.nodeType != FUNC    )           return NO_CHANGES;
+
+    if (currNode->right->data.nodeData.cnst == 1.0)
+    { 
+        dell_const_node_t(currNode, currNode->left);
+        return DELL_CONST_NODE;
+    }
+    if (currNode->right->data.nodeData.cnst == 0.0)
+    {
+        currNode->data.nodeType      = CONST;
+        currNode->data.nodeData.cnst = 1.0;
+
+        delete_tree(currNode->right);
+        delete_tree(currNode->left);
+
+        return DELL_ALL_NODE;
+    }
+
+    return NO_CHANGES;    
+}
+
 
 int easy_const_val (node_t *currNode)
 {   

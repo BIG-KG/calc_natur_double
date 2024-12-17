@@ -19,46 +19,49 @@ const int NUM_OF_FUNK    = 20;
 #define NAME_STR(a)  #a
 extern char funcs[][20];
 
-int p = 0;
+static node_t *getBrackets(char *parcingString, int *crrPtr);
+static node_t *getSumSub(char *parcingString, int *crrPtr);
+static node_t *getDouble(char *parcingString, int *crrPtr);
+static node_t *getMulDiv(char *parcingString, int *crrPtr);
+static node_t *getPow   (char *parcingString, int *crrPtr);
+static node_t *getStr   (char *parcingString, int *crrPtr);
 
-//char s[100] = "d(x)$";
 
-char s[100] = "d((x+1)/(x*x))$";
-
-node_t *getBrackets()
-{
-    if(s[p] == '(')
+static node_t *getBrackets(char *parcingString, int *crrPtr)
+{   
+    printf("start Bracks\n");
+    if(parcingString[*crrPtr] == '(')
     {
-        p++;
-        node_t *val = getSumSub();
-        if(s[p] != ')') 
+        *crrPtr = *crrPtr + 1 ;
+        node_t *val = getSumSub(parcingString, crrPtr);
+        if(parcingString[*crrPtr] != ')') 
         {
-            printf("p = %d", p);           
+            printf("crrPtr = %d", *crrPtr);           
             assert(0);
         }
-        p++;
+        *crrPtr = *crrPtr + 1 ;
         return val;
     }
 
     else
     {
-        return getDouble();
+        return getDouble(parcingString, crrPtr);
     }
  
 }
 
-node_t *getSumSub()
+static node_t *getSumSub(char *parcingString, int *crrPtr)
 {
-    //printf("start E\n");
-    node_t *val  = getMulDiv();
+    printf("start sumsub\n");
+    node_t *val  = getMulDiv(parcingString, crrPtr);
 
     node_t *prevOp = NULL;
     node_t *currOp = val ;
 
-    while (s[p] == '+' || s[p] == '-')
+    while (parcingString[*crrPtr] == '+' || parcingString[*crrPtr] == '-')
     {
-        char op = s[p];
-        p++;        
+        char op = parcingString[*crrPtr];
+        *crrPtr = *crrPtr + 1 ;        
 
         if (currOp != NULL)
         {
@@ -72,47 +75,54 @@ node_t *getSumSub()
 
         currOp->right = prevOp;
 
-        currOp->left  = getMulDiv();
+        currOp->left  = getMulDiv(parcingString, crrPtr);
     }
 
     return currOp;    
 }
 
 
-node_t *getMain()
-{
-    node_t *val = getSumSub();
-    if(s[p] != '$')  assert(0);
+node_t *getMain(char *inputParcingString)
+{   
+    printf("start main\n");
+    char parcingString[100] = "d(ln(sin(x^3)^2))$";
+    int crrPtr = 0;
+
+    if (inputParcingString != NULL) strcpy(parcingString, inputParcingString);
+
+    node_t *val = getSumSub(parcingString, &crrPtr);
+    if(parcingString[crrPtr] != '$')  assert(0);
     return val;
 }
 
-node_t *getDouble()
+node_t *getDouble(char *parcingString, int *crrPtr)
 {
-    //printf("start N\n");
-    if( isalpha(s[p]) ) return getStr();
+    printf("start double\n");
+
+    if( isalpha(parcingString[*crrPtr]) ) return getStr(parcingString, crrPtr);
 
     node_t *cnstNode = make_element();
     double val = 0;
-    int startPos = p;
-    while ('0' <= s[p] && s[p] <= '9')
+    int startPos = *crrPtr;
+    while ('0' <= parcingString[*crrPtr] && parcingString[*crrPtr] <= '9')
     {
-        val = val * 10 + (double)(s[p] - '0');
-        p++;
+        val = val * 10 + (double)(parcingString[*crrPtr] - '0');
+        *crrPtr = *crrPtr + 1 ;
     }
-    if(s[p] == '.')
+    if(parcingString[*crrPtr] == '.')
     {   
 
         double step = 0.1;
-        while ('0' <= s[p] && s[p] <= '9')
+        while ('0' <= parcingString[*crrPtr] && parcingString[*crrPtr] <= '9')
         {
-            val += step * (double)(s[p] - '0');
-            p++;
+            val += step * (double)(parcingString[*crrPtr] - '0');
+            *crrPtr = *crrPtr + 1 ;
             step *= 0.1;
         }
 
     }
 
-    if (startPos == p) assert(0);
+    if (startPos == *crrPtr) assert(0);
 
     cnstNode->data.nodeType      = CONST;
     cnstNode->data.nodeData.cnst = val;
@@ -120,17 +130,19 @@ node_t *getDouble()
     return cnstNode;
 }
 
-node_t *getMulDiv()
+static node_t *getMulDiv(char *parcingString, int *crrPtr)
 {
-     node_t *val  = getPow();
+    printf("start mulDiv\n");
+
+     node_t *val  = getPow(parcingString, crrPtr);
 
     node_t *prevOp = NULL;
     node_t *currOp = val ;
 
-    while (s[p] == '*' || s[p] == '/')
+    while (parcingString[*crrPtr] == '*' || parcingString[*crrPtr] == '/')
     {
-        char op = s[p];
-        p++;        
+        char op = parcingString[*crrPtr];
+        *crrPtr = *crrPtr + 1 ;        
 
         if (currOp != NULL)
         {
@@ -144,30 +156,32 @@ node_t *getMulDiv()
 
         currOp->left  = prevOp;
 
-        currOp->right = getPow();
+        currOp->right = getPow(parcingString, crrPtr);
     }
 
     return currOp;
 }
 
-node_t *getPow()
+static node_t *getPow(char *parcingString, int *crrPtr)
 {
-    node_t *val  = getBrackets();
+    printf("start pow\n");
+
+    node_t *val  = getBrackets(parcingString, crrPtr);
     node_t *val1 = 0;
     node_t *returningNode = val;
 
-    if(s[p] == '^')
+    if(parcingString[*crrPtr] == '^')
     {
-        p++;
-        val1 = getBrackets();
+        *crrPtr = *crrPtr + 1 ;
+        val1 = getBrackets(parcingString, crrPtr);
 
         returningNode = make_element();
 
         returningNode->data.nodeType      = FUNC;
         returningNode->data.nodeData.func = POW;
 
-        returningNode->right = val ;
-        returningNode->left  = val1;       
+        returningNode->left = val ;
+        returningNode->right  = val1;       
     }
 
     return returningNode;
@@ -177,34 +191,35 @@ node_t *getPow()
 
 
  
-node_t *getStr()
+static node_t *getStr(char *parcingString, int *crrPtr)
 {
+    printf("start Str\n");
     char funk_name[FUNK_NAME_SIZE] = {};
     int i = 0;
-    printf("etstr = %c, %d\n", s[p], p);
+    printf("etstr = %c, %d\n", parcingString[*crrPtr], *crrPtr);
 
-    while( isalpha(s[p]) )
+    while( isalpha(parcingString[*crrPtr]) )
     {
-        funk_name[i] = s[p];
+        funk_name[i] = parcingString[*crrPtr];
         i++;
-        p++;
+        *crrPtr = *crrPtr + 1 ;
     }
 
     if(i == 0) return NULL;
 
-    if(s[p] == '(')
+    if(parcingString[*crrPtr] == '(')
     {
-        printf("p = %d\n", p);
-        p++;
-        node_t *param = getSumSub();
+        printf("crrPtr = %d\n", *crrPtr);
+        *crrPtr = *crrPtr + 1 ;
+        node_t *param = getSumSub(parcingString, crrPtr);
         node_t *func_node = make_element();
         
         func_node->data.nodeType      = FUNC;
         func_node->data.nodeData.func = findfunc(funk_name);
         func_node->right         = param;
 
-        if (s[p] != ')') assert(0);
-        p++;
+        if (parcingString[*crrPtr] != ')') assert(0);
+        *crrPtr = *crrPtr + 1 ;
 
         return func_node;
     }
@@ -243,3 +258,4 @@ char findVar(char * const valName)
 {   
     return (*valName);
 }
+

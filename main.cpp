@@ -12,11 +12,15 @@
 #include ".\headers\calculator.h"
 #include ".\headers\comporator.h"
 
+const int MAX_VALUE_SIZE = 256;
+
 extern char funcs[][20];
+FILE* dumpingFile = NULL;
 
-#define NAME_STR(a)  #a                 
+#define NAME_STR(a)  #a      
 
-int main()
+__attribute__((constructor))
+void funckArray_init()
 {
     #define GENER(TYPE, str_name)                               \
         strcpy(funcs[TYPE], NAME_STR(TYPE));                    \
@@ -32,34 +36,54 @@ int main()
     strcpy(funcs[MUL], "*");
     strcpy(funcs[DIF], "d");
     strcpy(funcs[POW], "^");
+}
 
+
+int main()
+{
     tree_t testTree = {};
-    node_t *test = getMain();
+    node_t *test = NULL;
+    printf("To use your value print YES to load your print NO\n");
+    if(yes_no_scan() == 0)
+    {
+
+        char value[MAX_VALUE_SIZE] = "";
+        scanf("%*[\n]%[^\n]", value);
+        printf("start No\n");
+        test = getMain(value);
+    }
+    else
+    {
+        printf("start YEs\n");
+        test = getMain(NULL);
+    }
+
     testTree.treeStart = test;
 
-    dif_calc_f(testTree.treeStart, &testTree);
+    dumpingFile = fopen("tex_file.tex", "w");
 
-
-    //generate_html(&testTree);
-
-   // ease_tree(testTree.treeStart);
-
-    printf("end1_____________\n");
-    generate_html(&testTree);
-
-    FILE *texoutput_tex = fopen("tex_file.tex", "w");
+    dif_calc_f(testTree.treeStart, &testTree, dumpingFile);
 
     ease_tree(testTree.treeStart);
 
-    printTex(&testTree, texoutput_tex);
-    printTex(&testTree, texoutput_tex);
-    printTex(&testTree, texoutput_tex);
-    makeTex(texoutput_tex);
+    makeTex(dumpingFile);
 
-    fclose(texoutput_tex);
-
-    printf("end2________\n");
+    delete_tree(testTree.treeStart);
 
     return 0;
+}
 
+int yes_no_scan() 
+{
+    int attempts = 0;
+    while(attempts < 10){
+        char tmpr[STRING_DATA_SIZE] = {};
+        scanf ("%s", tmpr);
+        if ( !strcasecmp (tmpr, "yes") ) return 1;
+        if ( !strcasecmp (tmpr, "no" ) ) return 0;
+
+        printf("You can only enter \"Yes\" or \"No\".\n");
+    }
+
+    return 0;
 }

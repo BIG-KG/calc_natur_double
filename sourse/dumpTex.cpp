@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "..\headers\tree_const.h"
-#include "..\headers\tree_types.h"
-#include "..\headers\tree_funck.h"
+#include <tree_const.h>
+#include <tree_types.h>
+#include <tree_funck.h>
+#include <calculator.h>
 
 extern char funcs[][20];
 
@@ -14,7 +15,9 @@ static int printTex_rec(node_t *currNode, FILE *outputFile);
 
 
 int printTex(tree_t *currTree, FILE *texoutput_tex)
-{      
+{     
+    ease_tree(currTree->treeStart);
+
     static int numOfLaunches = 0;
 
     if (numOfLaunches == 0)
@@ -51,7 +54,8 @@ static int printTex_rec(node_t *currNode, FILE *outputFile)
     }
 
     if (currNode->data.nodeType == FUNC)
-    {   
+    {
+       
         switch (currNode->data.nodeData.func)
         {
         //__________________________________________ CODEGEN + CODE
@@ -111,7 +115,6 @@ static int printTex_rec(node_t *currNode, FILE *outputFile)
 
         //__________________________________________ CODEGEN + CODE
     }
-
     return 1;
 }
 
