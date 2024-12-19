@@ -65,9 +65,12 @@ int main()
 
     printTex(&testTree, dumpingFile);
 
-    //dif_calc_f(testTree.treeStart, &testTree, dumpingFile);
+    dif_calc_f(testTree.treeStart, &testTree, dumpingFile);
 
-    //ease_tree(testTree.treeStart);
+    ease_tree(testTree.treeStart);
+
+    printTex(&testTree, dumpingFile);
+
 
     makeTex(dumpingFile);
 
