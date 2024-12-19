@@ -12,7 +12,7 @@
 static node_t *dif_const (node_t *currNode,  tree_t *currTree);
 static node_t *dif_geom  (node_t *currNode,  tree_t *currTree);
 static node_t *dif_var   (node_t *currNode,  tree_t *currTree);
-static node_t *dif_arcsin_arccos(node_t *currNode,  tree_t *currTree);
+static node_t *dif_ARCSINCOS(node_t *currNode,  tree_t *currTree);
 
 
 static int easy_const_val     (node_t *currNode);
@@ -21,8 +21,8 @@ static int dell_const_node_t  (node_t *destNode, node_t *sourseNode);
 static int easy_const_const   (node_t *currNode);
 static int easy_pov_pov       (node_t *currNode);
 static int easy_pov_val       (node_t *currNode);
-static node_t *dif_geom_arc_TG (node_t *currNode,  tree_t *currTree);
-static node_t *dif_geom_TG     (node_t *currNode,  tree_t *currTree);
+static node_t *dif_geom_ATCTGCTG (node_t *currNode,  tree_t *currTree);
+static node_t *dif_geom_TGCTG     (node_t *currNode,  tree_t *currTree);
 
 
 
@@ -65,7 +65,8 @@ int dif_calc_f(node_t *currNode, tree_t *currTree, FILE *dumpFile)
     {
         case SUM:
         case SUB:
-            dif_sum_sub(currNode, currTree);
+            
+            (currNode, currTree);
             break;
         case MUL:
             dif_mul(currNode, currTree);
@@ -85,16 +86,18 @@ int dif_calc_f(node_t *currNode, tree_t *currTree, FILE *dumpFile)
             break;
         case ASIN:
         case ACOS:
-            dif_arcsin_arccos(currNode, currTree);
+            dif_ARCSINCOS(currNode, currTree);
             break;
         case TNG:
         case CTG:
-            dif_geom_TG(currNode, currTree);
+            dif_geom_TGCTG(currNode, currTree);
+            break;
         case ATNG:
         case ACTG:
-            dif_geom_arc_TG(currNode, currTree);
+            dif_geom_ATCTGCTG(currNode, currTree);
+            break;
         default:
-            printf("no such funck %d", currNode->right->data.nodeData.func);
+            printf("no such funck %d\n\n", currNode->right->data.nodeData.func);
         return 0;
     }
 
@@ -180,61 +183,60 @@ node_t *dif_geom(node_t *currNode,  tree_t *currTree)
     return currNode;
 }
 
-static node_t *dif_geom_arc_TG (node_t *currNode,  tree_t *currTree)
+static node_t *dif_geom_ATCTGCTG (node_t *currNode,  tree_t *currTree)
 {
     int     nodeData = currNode->right->data.nodeData.func;
     node_t *value    = currNode->right->right;
 
     currNode->data.nodeData.func = MUL;
-    currNode->left = make_dif_node();
-    currNode->left->right = copyNode(value, currTree);
+    currNode->right->left = make_dif_node();
+    currNode->right->left->right = copyNode(value, currTree);
     
     currNode->right->data.nodeData.func = DIV;
-    currNode->right->left                = make_const_node();
+    currNode->left                = make_const_node();
 
-    if (nodeData == ATNG) currNode->right->left->data.nodeData.cnst =  1;
-    else                  currNode->right->left->data.nodeData.cnst = -1; 
+    if (nodeData == ATNG ) currNode->left->data.nodeData.cnst =  1;
+    else                  currNode->left->data.nodeData.cnst = -1;; 
 
     currNode->right->right        = make_val_node(FUNC, SUM);
     currNode->right->right->right = make_val_node(CONST, 1);
 
-    currNode->right->right->left        = make_val_node(FUNC, SUM);
+    currNode->right->right->left        = make_val_node(FUNC, POW);
     currNode->right->right->left->right = make_val_node(CONST, 2);
 
-    if (nodeData == TNG) currNode->right->right->left->right  = make_val_node(FUNC, COS);
-    else                 currNode->right->right->left->right  = make_val_node(FUNC, SIN);
-    currNode->right->right->left = value;
+    currNode->right->right->left->left = value;
 
 
     return currNode; 
 }
 
-static node_t *dif_geom_TG(node_t *currNode,  tree_t *currTree)
+static node_t *dif_geom_TGCTG(node_t *currNode,  tree_t *currTree)
 {
+    printf("dif geom____________\n");
     int     nodeData = currNode->right->data.nodeData.func;
     node_t *value    = currNode->right->right;
 
     currNode->data.nodeData.func = MUL;
-    currNode->left = make_dif_node();
-    currNode->left->right = copyNode(value, currTree);
+    currNode->right->left = make_dif_node();
+    currNode->right->left->right = copyNode(value, currTree);
     
     currNode->right->data.nodeData.func = DIV;
-    currNode->right->left                = make_const_node();
+    currNode->left                = make_const_node();
 
-    if (nodeData == TNG) currNode->right->left->data.nodeData.cnst =  1;
-    else                 currNode->right->left->data.nodeData.cnst = -1;
+    if (nodeData == TNG) currNode->left->data.nodeData.cnst =  1;
+    else                 currNode->left->data.nodeData.cnst = -1;
 
     currNode->right->right        = make_val_node(FUNC, POW);
     currNode->right->right->right = make_val_node(CONST, 2);
     if (nodeData == TNG) currNode->right->right->left  = make_val_node(FUNC, COS);
     else                 currNode->right->right->left  = make_val_node(FUNC, SIN);
-    currNode->right->right->left = value;
+    currNode->right->right->left->right = value;
 
 
     return currNode;
 }   
 
-node_t *dif_arcsin_arccos(node_t *currNode,  tree_t *currTree)
+node_t *dif_ARCSINCOS(node_t *currNode,  tree_t *currTree)
 {
     printf("asinacos__________\n");
     double sign = 0;
@@ -568,6 +570,12 @@ static int dell_const_node_t (node_t *destNode, node_t *sourseNode)
 
     return 0;
 }
+
+int easy_mul_const_underConst(node_t *currNode)
+{
+    if (currNode == NULL);
+}
+
 
 int easy_const_const (node_t *currNode)
 {   

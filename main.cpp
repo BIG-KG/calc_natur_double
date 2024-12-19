@@ -71,6 +71,7 @@ int main()
 
     printTex(&testTree, dumpingFile);
 
+    generate_html(&testTree);
 
     makeTex(dumpingFile);
 

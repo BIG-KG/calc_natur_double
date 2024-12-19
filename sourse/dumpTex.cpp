@@ -46,11 +46,11 @@ int printTex(tree_t *currTree, FILE *texoutput_tex)
     }
     
 
-    fprintf(texoutput_tex, "$");
+    fprintf(texoutput_tex, "{\\Large $");
     printTex_rec(currTree->treeStart, texoutput_tex, 0);
-    fprintf(texoutput_tex, "$");
+    fprintf(texoutput_tex, "$}");
 
-    fprintf(texoutput_tex, "\\\\\n");
+    fprintf(texoutput_tex, "\\\\ \\\\ \n");
 
     return 0;
 }

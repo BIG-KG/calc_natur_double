@@ -86,7 +86,8 @@ static node_t *getSumSub(char *parcingString, int *crrPtr)
 node_t *getMain(char *inputParcingString)
 {   
     printf("start main\n");
-    char parcingString[MAK_EXPRESSION_SIZE] = "d(sin(25*x^3-1)+cos(3*x+4)^2)";
+    //char parcingString[MAK_EXPRESSION_SIZE] = "d(sin(25*x^3-1)+cos(3*x+4)^2)";
+    char parcingString[MAK_EXPRESSION_SIZE] = "d(atng(sin(x^2)))";
     int crrPtr = 0;
 
     if (inputParcingString != NULL) strcpy(parcingString, inputParcingString);
